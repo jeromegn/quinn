@@ -753,21 +753,22 @@ mod gso {
     /// Checks whether GSO support is available by setting the UDP_SEGMENT
     /// option on a socket
     pub(crate) fn max_gso_segments() -> usize {
-        const GSO_SIZE: libc::c_int = 1500;
+        // const GSO_SIZE: libc::c_int = 1500;
 
-        let socket = match std::net::UdpSocket::bind("[::]:0")
-            .or_else(|_| std::net::UdpSocket::bind("127.0.0.1:0"))
-        {
-            Ok(socket) => socket,
-            Err(_) => return 1,
-        };
+        // let socket = match std::net::UdpSocket::bind("[::]:0")
+        //     .or_else(|_| std::net::UdpSocket::bind("127.0.0.1:0"))
+        // {
+        //     Ok(socket) => socket,
+        //     Err(_) => return 1,
+        // };
 
-        // As defined in linux/udp.h
-        // #define UDP_MAX_SEGMENTS        (1 << 6UL)
-        match set_socket_option(&socket, libc::SOL_UDP, libc::UDP_SEGMENT, GSO_SIZE) {
-            Ok(()) => 64,
-            Err(_) => 1,
-        }
+        // // As defined in linux/udp.h
+        // // #define UDP_MAX_SEGMENTS        (1 << 6UL)
+        // match set_socket_option(&socket, libc::SOL_UDP, libc::UDP_SEGMENT, GSO_SIZE) {
+        //     Ok(()) => 64,
+        //     Err(_) => 1,
+        // }
+        1
     }
 
     pub(crate) fn set_segment_size(encoder: &mut cmsg::Encoder, segment_size: u16) {
