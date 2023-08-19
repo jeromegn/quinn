@@ -117,12 +117,12 @@ fn init(io: SockRef<'_>) -> io::Result<()> {
         if is_ipv4 {
             set_socket_option(&*io, libc::IPPROTO_IP, libc::IP_PKTINFO, OPTION_ON)?;
         } else {
-            set_socket_option(
-                &*io,
-                libc::IPPROTO_IPV6,
-                libc::IPV6_MTU_DISCOVER,
-                libc::IP_PMTUDISC_PROBE,
-            )?;
+            // set_socket_option(
+            //     &*io,
+            //     libc::IPPROTO_IPV6,
+            //     libc::IPV6_MTU_DISCOVER,
+            //     libc::IP_PMTUDISC_PROBE,
+            // )?;
         }
     }
     #[cfg(any(target_os = "freebsd", target_os = "macos", target_os = "ios"))]
@@ -141,15 +141,15 @@ fn init(io: SockRef<'_>) -> io::Result<()> {
         }
     }
 
-    // Options standardized in RFC 3542
-    if !is_ipv4 {
-        set_socket_option(&*io, libc::IPPROTO_IPV6, libc::IPV6_RECVPKTINFO, OPTION_ON)?;
-        set_socket_option(&*io, libc::IPPROTO_IPV6, libc::IPV6_RECVTCLASS, OPTION_ON)?;
-        // Linux's IP_PMTUDISC_PROBE allows us to operate under interface MTU rather than the
-        // kernel's path MTU guess, but actually disabling fragmentation requires this too. See
-        // __ip6_append_data in ip6_output.c.
-        set_socket_option(&*io, libc::IPPROTO_IPV6, libc::IPV6_DONTFRAG, OPTION_ON)?;
-    }
+    // // Options standardized in RFC 3542
+    // if !is_ipv4 {
+    //     set_socket_option(&*io, libc::IPPROTO_IPV6, libc::IPV6_RECVPKTINFO, OPTION_ON)?;
+    //     set_socket_option(&*io, libc::IPPROTO_IPV6, libc::IPV6_RECVTCLASS, OPTION_ON)?;
+    //     // Linux's IP_PMTUDISC_PROBE allows us to operate under interface MTU rather than the
+    //     // kernel's path MTU guess, but actually disabling fragmentation requires this too. See
+    //     // __ip6_append_data in ip6_output.c.
+    //     set_socket_option(&*io, libc::IPPROTO_IPV6, libc::IPV6_DONTFRAG, OPTION_ON)?;
+    // }
 
     Ok(())
 }
@@ -717,22 +717,21 @@ mod gso {
     /// Checks whether GSO support is available by setting the UDP_SEGMENT
     /// option on a socket
     pub(crate) fn max_gso_segments() -> usize {
-        // const GSO_SIZE: libc::c_int = 1500;
+        const GSO_SIZE: libc::c_int = 1500;
 
-        // let socket = match std::net::UdpSocket::bind("[::]:0")
-        //     .or_else(|_| std::net::UdpSocket::bind("127.0.0.1:0"))
-        // {
-        //     Ok(socket) => socket,
-        //     Err(_) => return 1,
-        // };
+        let socket = match std::net::UdpSocket::bind("[::]:0")
+            .or_else(|_| std::net::UdpSocket::bind("127.0.0.1:0"))
+        {
+            Ok(socket) => socket,
+            Err(_) => return 1,
+        };
 
-        // // As defined in linux/udp.h
-        // // #define UDP_MAX_SEGMENTS        (1 << 6UL)
-        // match set_socket_option(&socket, libc::SOL_UDP, libc::UDP_SEGMENT, GSO_SIZE) {
-        //     Ok(()) => 64,
-        //     Err(_) => 1,
-        // }
-        1
+        // As defined in linux/udp.h
+        // #define UDP_MAX_SEGMENTS        (1 << 6UL)
+        match set_socket_option(&socket, libc::SOL_UDP, libc::UDP_SEGMENT, GSO_SIZE) {
+            Ok(()) => 64,
+            Err(_) => 1,
+        }
     }
 
     pub(crate) fn set_segment_size(encoder: &mut cmsg::Encoder, segment_size: u16) {
