@@ -547,10 +547,10 @@ fn prepare_msg(
     let ecn = transmit.ecn.map_or(0, |x| x as libc::c_int);
     if transmit.destination.is_ipv4() {
         if !sendmsg_einval {
-            encoder.push(libc::IPPROTO_IP, libc::IP_TOS, ecn as IpTosTy);
+            // encoder.push(libc::IPPROTO_IP, libc::IP_TOS, ecn as IpTosTy);
         }
     } else {
-        encoder.push(libc::IPPROTO_IPV6, libc::IPV6_TCLASS, ecn);
+        // encoder.push(libc::IPPROTO_IPV6, libc::IPV6_TCLASS, ecn);
     }
 
     if let Some(segment_size) = transmit.segment_size {
@@ -569,7 +569,7 @@ fn prepare_msg(
                         },
                         ipi_addr: libc::in_addr { s_addr: 0 },
                     };
-                    encoder.push(libc::IPPROTO_IP, libc::IP_PKTINFO, pktinfo);
+                    // encoder.push(libc::IPPROTO_IP, libc::IP_PKTINFO, pktinfo);
                 }
                 #[cfg(any(target_os = "freebsd", target_os = "macos"))]
                 {
@@ -577,7 +577,7 @@ fn prepare_msg(
                         let addr = libc::in_addr {
                             s_addr: u32::from_ne_bytes(v4.octets()),
                         };
-                        encoder.push(libc::IPPROTO_IP, libc::IP_RECVDSTADDR, addr);
+                        // encoder.push(libc::IPPROTO_IP, libc::IP_RECVDSTADDR, addr);
                     }
                 }
             }
@@ -588,7 +588,7 @@ fn prepare_msg(
                         s6_addr: v6.octets(),
                     },
                 };
-                encoder.push(libc::IPPROTO_IPV6, libc::IPV6_PKTINFO, pktinfo);
+                // encoder.push(libc::IPPROTO_IPV6, libc::IPV6_PKTINFO, pktinfo);
             }
         }
     }
@@ -735,7 +735,7 @@ mod gso {
     }
 
     pub(crate) fn set_segment_size(encoder: &mut cmsg::Encoder, segment_size: u16) {
-        encoder.push(libc::SOL_UDP, libc::UDP_SEGMENT, segment_size);
+        // encoder.push(libc::SOL_UDP, libc::UDP_SEGMENT, segment_size);
     }
 }
 
