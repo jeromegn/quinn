@@ -735,7 +735,7 @@ mod gso {
     }
 
     pub(crate) fn set_segment_size(encoder: &mut cmsg::Encoder, segment_size: u16) {
-        // encoder.push(libc::SOL_UDP, libc::UDP_SEGMENT, segment_size);
+        encoder.push(libc::SOL_UDP, libc::UDP_SEGMENT, segment_size);
     }
 }
 
