@@ -235,18 +235,32 @@ impl Endpoint {
         let addresses = FourTuple { remote, local_ip };
         let dst_cid = first_decode.dst_cid();
         let known_ch = (self.local_cid_generator.cid_len() > 0)
-            .then(|| self.connection_ids.get(&dst_cid))
+            .then(|| {
+                let x = self.connection_ids.get(&dst_cid);
+                if x.is_some() {
+                    tracing::trace!("packet from {remote} matches cid");
+                }
+                x
+            })
             .flatten()
             .or_else(|| {
                 if first_decode.is_initial() || first_decode.is_0rtt() {
-                    self.connection_ids_initial.get(&dst_cid)
+                    let x = self.connection_ids_initial.get(&dst_cid);
+                    if x.is_some() {
+                        tracing::trace!("packet from {remote} matches initial cid");
+                    }
+                    x
                 } else {
                     None
                 }
             })
             .or_else(|| {
                 if self.local_cid_generator.cid_len() == 0 {
-                    self.connection_remotes.get(&addresses)
+                    let x = self.connection_remotes.get(&addresses);
+                    if x.is_some() {
+                        tracing::trace!("packet from {remote} matches address");
+                    }
+                    x
                 } else {
                     None
                 }
@@ -256,8 +270,13 @@ impl Endpoint {
                 if data.len() < RESET_TOKEN_SIZE {
                     return None;
                 }
-                self.connection_reset_tokens
-                    .get(addresses.remote, &data[data.len() - RESET_TOKEN_SIZE..])
+                let x = self
+                    .connection_reset_tokens
+                    .get(addresses.remote, &data[data.len() - RESET_TOKEN_SIZE..]);
+                if x.is_some() {
+                    tracing::trace!("packet from {remote} matches reset token");
+                }
+                x
             })
             .cloned();
         if let Some(ch) = known_ch {
