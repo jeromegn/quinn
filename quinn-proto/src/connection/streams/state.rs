@@ -1,5 +1,5 @@
 use std::{
-    collections::{binary_heap::PeekMut, hash_map, BinaryHeap, VecDeque},
+    collections::{binary_heap::PeekMut, btree_map, BTreeMap, BinaryHeap, VecDeque},
     convert::TryFrom,
     mem,
 };
@@ -24,8 +24,8 @@ use crate::{
 pub struct StreamsState {
     pub(super) side: Side,
     // Set of streams that are currently open, or could be immediately opened by the peer
-    pub(super) send: FxHashMap<StreamId, Send>,
-    pub(super) recv: FxHashMap<StreamId, Recv>,
+    pub(super) send: BTreeMap<StreamId, Send>,
+    pub(super) recv: BTreeMap<StreamId, Recv>,
     pub(super) next: [u64; 2],
     /// Maximum number of locally-initiated streams that may be opened over the lifetime of the
     /// connection so far, per direction
@@ -103,8 +103,8 @@ impl StreamsState {
     ) -> Self {
         let mut this = Self {
             side,
-            send: FxHashMap::default(),
-            recv: FxHashMap::default(),
+            send: BTreeMap::default(),
+            recv: BTreeMap::default(),
             next: [0, 0],
             max: [0, 0],
             max_remote: [max_remote_bi.into(), max_remote_uni.into()],
@@ -318,8 +318,8 @@ impl StreamsState {
 
     pub(crate) fn reset_acked(&mut self, id: StreamId) {
         match self.send.entry(id) {
-            hash_map::Entry::Vacant(_) => {}
-            hash_map::Entry::Occupied(e) => {
+            btree_map::Entry::Vacant(_) => {}
+            btree_map::Entry::Occupied(e) => {
                 if let SendState::ResetSent = e.get().state {
                     e.remove_entry();
                     self.stream_freed(id, StreamHalf::Send);
@@ -590,8 +590,8 @@ impl StreamsState {
 
     pub(crate) fn received_ack_of(&mut self, frame: frame::StreamMeta) {
         let mut entry = match self.send.entry(frame.id) {
-            hash_map::Entry::Vacant(_) => return,
-            hash_map::Entry::Occupied(e) => e,
+            btree_map::Entry::Vacant(_) => return,
+            btree_map::Entry::Occupied(e) => e,
         };
         let stream = entry.get_mut();
         if stream.is_reset() {

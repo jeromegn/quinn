@@ -1,6 +1,6 @@
 use std::{
     cell::RefCell,
-    collections::{hash_map, BinaryHeap, VecDeque},
+    collections::{btree_map, hash_map, BinaryHeap, VecDeque},
 };
 
 use bytes::Bytes;
@@ -130,8 +130,8 @@ impl<'a> RecvStream<'a> {
     /// attempts to operate on a stream will yield `UnknownStream` errors.
     pub fn stop(&mut self, error_code: VarInt) -> Result<(), UnknownStream> {
         let mut entry = match self.state.recv.entry(self.id) {
-            hash_map::Entry::Occupied(s) => s,
-            hash_map::Entry::Vacant(_) => return Err(UnknownStream { _private: () }),
+            btree_map::Entry::Occupied(s) => s,
+            btree_map::Entry::Vacant(_) => return Err(UnknownStream { _private: () }),
         };
         let stream = entry.get_mut();
 
